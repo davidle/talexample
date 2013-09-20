@@ -61,8 +61,24 @@ require.def("sampleapp/appui/components/simple",
                 });
                 playerButton.appendChildWidget(new Label("Simple Video Player Example"));
 
+
+             /**   var tvButton = new Button();
+                tvButton.addEventListener("select", function(evt){
+                    self.getCurrentApplication().pushComponent("maincontainer", "sampleapp/appui/components/simplebroadcastcomponent");
+                });
+                tvButton.appendChildWidget(new Label("Broadcast Test"));
+**/
+                var glButton = new Button();
+                glButton.addEventListener("select", function(evt){
+                    self.getCurrentApplication().pushComponent("maincontainer", "sampleapp/appui/components/webgltestcomponent");
+                });
+                glButton.appendChildWidget(new Label("WebGL Test"));
+
+
+
                 // Create a vertical list and append the buttons to navigate within the list
                 verticalListMenu = new VerticalList("mainMenuList");
+                verticalListMenu.appendChildWidget(glButton);
                 verticalListMenu.appendChildWidget(carouselButton);
                 verticalListMenu.appendChildWidget(playerButton);
                 this.appendChildWidget(verticalListMenu);
@@ -85,7 +101,7 @@ require.def("sampleapp/appui/components/simple",
             // if the component is hidden and subsequently reinstated.
             _onBeforeRender: function () {
 
-
+		debugger;
             } 
         });
     }
