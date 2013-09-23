@@ -52,29 +52,36 @@ require.def("sampleapp/appui/components/webgltestcomponent",
 
                     var verticalListMenu = new VerticalList("mainMenuList");
                     this.appendChildWidget(verticalListMenu);
-                    this.addEventListener("beforerender", function (ev) {
-                        self._onBeforeRender(ev);
-                    });
-
 
                     try {
+                        //This sets up WebGL environment when the page loads
+                        //It will throw an error if WebGL is not available
+                        //This is test 1
+                        self._onBeforeRender();
 
+                        //Add the back button to return to the menu
                         var back = new Button('back');
                         back.appendChildWidget(new Label('BACK'));
                         back.addEventListener('select', function(evt) {
-                            //		self.showBackground();
+                            //Completely remove video player and GL canvas
                             self.glWidget.dispose();
                             self._player.destroy();
                             self.removeChildWidget(self._player);
                             self._player = null;
                             self.removeChildWidget(self.glWidget);
+                            self.glWidget = null
+                            //Return to menu
                             self.parentWidget.back();
                         });
 
+                        //Set up test 4 - video texturing
+                        //Expect this to fail on most devices <2014
                         var test4 = new Button('test4');
                         test4.appendChildWidget(new Label('Add video cube'));
                         test4.addEventListener('select', function(evt) {
+                            //Add the cube
                             self.addTestCube3();
+                            //Create the animation loop:
                             var callback3 = function() {
                                 self.mesh.rotation.x += 0.01;
                                 self.mesh.rotation.y += 0.02;
@@ -84,21 +91,23 @@ require.def("sampleapp/appui/components/webgltestcomponent",
                                 if (self.mesh3) {
                                     self.mesh3.rotation.x += 0.01;
                                     self.mesh3.rotation.y += 0.02;
+                                    //Handle video change every frame
                                     if (self._player.outputElement.readyState === self._player.outputElement.HAVE_ENOUGH_DATA) {
                                         self.mesh3tex.needsUpdate = true;
                                     }
-
                                 }
                             };
-
                             self.glWidget.setAnimCallback(callback3);
                             back.focus();
                         });
 
+                        //Set up test 3 - simple texturing
                         var test3 = new Button('test3');
                         test3.appendChildWidget(new Label('Add texture cube'));
                         test3.addEventListener('select', function(evt) {
+                            //Add the cube
                             self.addTestCube2();
+                            //Create the animation loop:
                             var callback2 = function() {
                                 self.mesh.rotation.x += 0.01;
                                 self.mesh.rotation.y += 0.02;
@@ -107,24 +116,25 @@ require.def("sampleapp/appui/components/webgltestcomponent",
                                     self.mesh2.rotation.y += 0.02;
                                 }
                             };
-
                             self.glWidget.setAnimCallback(callback2);
                             test4.focus();
                         });
 
+                        //Set up test 2 - wireframe mesh
                         var test2 = new Button('test2');
                         test2.appendChildWidget(new Label('Load scene with wireframe cube'));
                         test2.addEventListener('select', function(evt) {
-
+                            //Add the cube
                             self.addTestCube();
+                            //Create the animation loop:
                             var callback = function() {
                                 self.mesh.rotation.x += 0.01;
                                 self.mesh.rotation.y += 0.02;
                             };
                             self.glWidget.setAnimCallback(callback);
+                            //Kick off hte animation
                             self.glWidget.startAnimation();
                             test3.focus();
-
                         });
 
                         verticalListMenu.appendChildWidget(test2);
@@ -134,37 +144,38 @@ require.def("sampleapp/appui/components/webgltestcomponent",
 
 
                     } catch (err) {
-
+                        //If WebGL isn't available, just add the back button:
                         var test4 = new Button('test4');
                         test4.appendChildWidget(new Label('Failed to get WebGL context'));
                         verticalListMenu.appendChildWidget(test4);
                         test4.addEventListener('select', function(evt) {
-                            //		self.showBackground();
                             self.parentWidget.back();
                         });
 
                     }
-                },
-                _onBeforeRender: function(ev) {
-                                    var size = {
-                            width: 960,
-                            height: 400
-                        };
-                        this.glWidget = new GLWidget("testGL", size);
-                        this.appendChildWidget(this.glWidget);
-                },
-                hideBackground: function() {
-                    this._device.addClassToElement(document.body, 'background-none');
-                    this._application.getRootWidget().addClass('background-none');
-                },
-                showBackground: function() {
-                    if (this._device.getPlayerEmbedMode() === Media.EMBED_MODE_BACKGROUND) {
-                        this._device.removeClassFromElement(document.body, 'background-none');
-                        this._application.getRootWidget().removeClass('background-none');
-                    }
+
+                    //Add the event listener in case the user exits then re-enters this component
+                    this.addEventListener("beforerender", function(ev) {
+                        if (!self.glWidget)
+                            self._onBeforeRender(ev);
+                    });
                 },
                 /**
-                 * Adds a simple wireframe mesh for test
+                 * Called as the component loads, creates the GLWidget
+                 * containing the WebGL canvas
+                 * @param {type} ev
+                 */
+                _onBeforeRender: function(ev) {
+                    var size = {
+                        width: 960,
+                        height: 400
+                    };
+                    this.glWidget = new GLWidget("testGL", size);
+                    this.appendChildWidget(this.glWidget);
+                },
+                /**
+                 * Adds a simple white wireframe mesh for test 2,
+                 * also sets a background/clear colour.
                  */
                 addTestCube: function() {
                     var geometry = new this.glWidget.THREE.CubeGeometry(200, 200, 200);
@@ -174,41 +185,48 @@ require.def("sampleapp/appui/components/webgltestcomponent",
                     this.glWidget.scene.add(this.mesh);
                     this.glWidget.renderer.setClearColorHex(0x555, 1);
                 },
+                /**
+                 *  Adds the cube for test 3, loads a png as a texture
+                 */
                 addTestCube2: function() {
                     var self = this;
 
                     var geometry = new this.glWidget.THREE.CubeGeometry(200, 200, 200);
                     this.glWidget.THREE.ImageUtils.loadTexture('static/img/b-texture-inv.png', {}, function(texture) {
-
                         var material = new self.glWidget.THREE.MeshBasicMaterial({map: texture});
 
                         self.mesh2 = new self.glWidget.THREE.Mesh(geometry, material);
                         self.mesh2.position.x = -400;
                         self.glWidget.scene.add(self.mesh2);
                     });
-
-
                 },
+                /**
+                 *  Adds the cube for test 4, loads a video as a texture.
+                 *  The video is sourced from a TAL media player, this is a somewhat
+                 *  pointless abstraction as only a HTML5 video element will work.
+                 *  
+                 *  The source video is N-POT (Non-Power Of Two sized) so some
+                 *  devices will be unable to use it. 
+                 */
                 addTestCube3: function() {
                     var self = this;
-                    // Create a video player
+                    // Video source
                     var videoUrl = "static/mp4/spinning-logo.mp4";
                     var videoType = "video/mp4";
 
                     // Create the player and append it to the component
                     this._player = this._device.createPlayer('testPlayer', 'video');
                     this._player.addClass('visibility-hidden');
-
                     this.appendChildWidget(this._player);
 
                     // Start playing the video as soon as the device fires an antie 'canplay' event
                     this._player.addEventListener('canplay', function(evt) {
+                        //Hide the video as it is only seen as a texture
                         self._player.outputElement.hidden = true;
 
                         self._player.play();
 
                         var geometry = new self.glWidget.THREE.CubeGeometry(200, 200, 200);
-                        //var vel = document.getElementById(self._player.id)
                         self.mesh3tex = new self.glWidget.THREE.Texture(self._player.outputElement);
                         self.mesh3tex.generateMipmaps = false;
                         self.mesh3tex.magFilter = self.glWidget.THREE.LinearFilter;
@@ -219,12 +237,10 @@ require.def("sampleapp/appui/components/webgltestcomponent",
                         self.mesh3 = new self.glWidget.THREE.Mesh(geometry, material);
                         self.mesh3.position.x = 400;
                         self.glWidget.scene.add(self.mesh3);
-
                     });
 
                     this._player.setSources([new VideoSource(videoUrl, videoType)]);
                     this._player.load();
-
                 },
             });
         });
