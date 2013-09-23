@@ -52,7 +52,6 @@ require.def("sampleapp/appui/components/webgltestcomponent",
 
                     var verticalListMenu = new VerticalList("mainMenuList");
                     this.appendChildWidget(verticalListMenu);
-                    debugger;
                     this.addEventListener("beforerender", function (ev) {
                         self._onBeforeRender(ev);
                     });
@@ -114,7 +113,7 @@ require.def("sampleapp/appui/components/webgltestcomponent",
                         });
 
                         var test2 = new Button('test2');
-                        test2.appendChildWidget(new Label('Add wireframe cube'));
+                        test2.appendChildWidget(new Label('Load scene with wireframe cube'));
                         test2.addEventListener('select', function(evt) {
 
                             self.addTestCube();
