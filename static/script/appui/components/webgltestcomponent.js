@@ -52,15 +52,13 @@ require.def("sampleapp/appui/components/webgltestcomponent",
 
                     var verticalListMenu = new VerticalList("mainMenuList");
                     this.appendChildWidget(verticalListMenu);
-                    //this.hideBackground();
+                    debugger;
+                    this.addEventListener("beforerender", function (ev) {
+                        self._onBeforeRender(ev);
+                    });
+
 
                     try {
-                        var size = {
-                            width: 960,
-                            height: 400
-                        };
-                        this.glWidget = new GLWidget("testGL", size);
-                        this.appendChildWidget(this.glWidget);
 
                         var back = new Button('back');
                         back.appendChildWidget(new Label('BACK'));
@@ -149,7 +147,12 @@ require.def("sampleapp/appui/components/webgltestcomponent",
                     }
                 },
                 _onBeforeRender: function(ev) {
-
+                                    var size = {
+                            width: 960,
+                            height: 400
+                        };
+                        this.glWidget = new GLWidget("testGL", size);
+                        this.appendChildWidget(this.glWidget);
                 },
                 hideBackground: function() {
                     this._device.addClassToElement(document.body, 'background-none');
@@ -165,23 +168,22 @@ require.def("sampleapp/appui/components/webgltestcomponent",
                  * Adds a simple wireframe mesh for test
                  */
                 addTestCube: function() {
+                    var geometry = new this.glWidget.THREE.CubeGeometry(200, 200, 200);
+                    var material = new this.glWidget.THREE.MeshBasicMaterial({color: 0xffffff, wireframe: true});
 
-                    var geometry = new THREE.CubeGeometry(200, 200, 200);
-                    var material = new THREE.MeshBasicMaterial({color: 0xffffff, wireframe: true});
-
-                    this.mesh = new THREE.Mesh(geometry, material);
+                    this.mesh = new this.glWidget.THREE.Mesh(geometry, material);
                     this.glWidget.scene.add(this.mesh);
                     this.glWidget.renderer.setClearColorHex(0x555, 1);
                 },
                 addTestCube2: function() {
                     var self = this;
 
-                    var geometry = new THREE.CubeGeometry(200, 200, 200);
-                    THREE.ImageUtils.loadTexture('static/img/b-texture-inv.png', {}, function(texture) {
+                    var geometry = new this.glWidget.THREE.CubeGeometry(200, 200, 200);
+                    this.glWidget.THREE.ImageUtils.loadTexture('static/img/b-texture-inv.png', {}, function(texture) {
 
-                        var material = new THREE.MeshBasicMaterial({map: texture});
+                        var material = new self.glWidget.THREE.MeshBasicMaterial({map: texture});
 
-                        self.mesh2 = new THREE.Mesh(geometry, material);
+                        self.mesh2 = new self.glWidget.THREE.Mesh(geometry, material);
                         self.mesh2.position.x = -400;
                         self.glWidget.scene.add(self.mesh2);
                     });
@@ -206,16 +208,16 @@ require.def("sampleapp/appui/components/webgltestcomponent",
 
                         self._player.play();
 
-                        var geometry = new THREE.CubeGeometry(200, 200, 200);
+                        var geometry = new self.glWidget.THREE.CubeGeometry(200, 200, 200);
                         //var vel = document.getElementById(self._player.id)
-                        self.mesh3tex = new THREE.Texture(self._player.outputElement);
+                        self.mesh3tex = new self.glWidget.THREE.Texture(self._player.outputElement);
                         self.mesh3tex.generateMipmaps = false;
-                        self.mesh3tex.magFilter = THREE.LinearFilter;
-                        self.mesh3tex.minFilter = THREE.LinearFilter;
+                        self.mesh3tex.magFilter = self.glWidget.THREE.LinearFilter;
+                        self.mesh3tex.minFilter = self.glWidget.THREE.LinearFilter;
 
-                        var material = new THREE.MeshBasicMaterial({color: 0xffffff, map: self.mesh3tex});
+                        var material = new self.glWidget.THREE.MeshBasicMaterial({color: 0xffffff, map: self.mesh3tex});
 
-                        self.mesh3 = new THREE.Mesh(geometry, material);
+                        self.mesh3 = new self.glWidget.THREE.Mesh(geometry, material);
                         self.mesh3.position.x = 400;
                         self.glWidget.scene.add(self.mesh3);
 
