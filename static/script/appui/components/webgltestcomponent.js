@@ -21,131 +21,209 @@
  * All rights reserved Please contact us for an alternative licence
  */
 
-require.def("sampleapp/appui/components/webgltestcomponent", [ "antie/widgets/component", "antie/widgets/button",
-		"antie/widgets/label", "antie/widgets/verticallist", "antie/widgets/glwidget", ], function(Component, Button,
-		Label, VerticalList, GLWidget) {
+require.def("sampleapp/appui/components/webgltestcomponent",
+        [
+            "antie/widgets/component",
+            "antie/widgets/button",
+            "antie/widgets/label",
+            "antie/widgets/verticallist",
+            "antie/widgets/glwidget",
+            "antie/videosource",
+            "antie/widgets/media"
+        ],
+        function(Component, Button, Label, VerticalList, GLWidget, VideoSource, Media) {
 
-	// All components extend Component
-	return Component.extend({
-		init : function() {
-			var self = this;
-			// It is important to call the constructor of the superclass
-			this._super("webgltestcomponent");
-			// Get a reference to the current application and device
-			// objects
-			this._application = this.getCurrentApplication();
-			this._device = this._application.getDevice();
+            // All components extend Component
+            return Component.extend({
+                init: function() {
+                    var self = this;
+                    // It is important to call the constructor of the superclass
+                    this._super("webgltestcomponent");
+                    // Get a reference to the current application and device
+                    // objects
+                    this._application = this.getCurrentApplication();
+                    this._device = this._application.getDevice();
 
-			// Create a a label add a class to it, this class can be used as a
-			// CSS selector
-			var description = new Label("WebGL test...");
-			description.addClass("description");
-			this.appendChildWidget(description);
+                    // Create a a label add a class to it, this class can be used as a
+                    // CSS selector
+                    var description = new Label("WebGL test...");
+                    description.addClass("description");
+                    this.appendChildWidget(description);
 
-			var verticalListMenu = new VerticalList("mainMenuList");
-			this.appendChildWidget(verticalListMenu);
-			//this.hideBackground();
+                    var verticalListMenu = new VerticalList("mainMenuList");
+                    this.appendChildWidget(verticalListMenu);
+                    //this.hideBackground();
 
-			try {
-				var size = {
-					width : 960,
-					height : 400
-				};
-				var testGLWidget = new GLWidget("testGL", size);
-				this.appendChildWidget(testGLWidget);
-				
-				var back = new Button('back');
-				back.appendChildWidget(new Label('BACK'));
-				back.addEventListener('select', function(evt) {
-			//		self.showBackground();
-					testGLWidget.dispose();
-					self.removeChildWidget(testGLWidget);
-					self.parentWidget.back();
-				});
-				
-				var test4 = new Button('test4');
-				test4.appendChildWidget(new Label('Add video cube'));
-				test4.addEventListener('select', function(evt) {
-					testGLWidget.addTestCube3();
-					var callback3 = function() {
-						testGLWidget.mesh.rotation.x += 0.01;
-						testGLWidget.mesh.rotation.y += 0.02;
-						testGLWidget.mesh2.rotation.x += 0.01;
-						testGLWidget.mesh2.rotation.y += 0.02;
-						
-						if(testGLWidget.mesh3){
-							testGLWidget.mesh3.rotation.x += 0.01;
-							testGLWidget.mesh3.rotation.y += 0.02;
-						}
-					};
+                    try {
+                        var size = {
+                            width: 960,
+                            height: 400
+                        };
+                        this.glWidget = new GLWidget("testGL", size);
+                        this.appendChildWidget(this.glWidget);
 
-					testGLWidget.setAnimCallback(callback3);
-					back.focus();
-				});
-				
-				var test3 = new Button('test3');
-				test3.appendChildWidget(new Label('Add texture cube'));
-				test3.addEventListener('select', function(evt) {
-					testGLWidget.addTestCube2();
-					var callback2 = function() {
-						testGLWidget.mesh.rotation.x += 0.01;
-						testGLWidget.mesh.rotation.y += 0.02;
-						if(testGLWidget.mesh2){
-							testGLWidget.mesh2.rotation.x += 0.01;
-							testGLWidget.mesh2.rotation.y += 0.02;
-						}
-					};
+                        var back = new Button('back');
+                        back.appendChildWidget(new Label('BACK'));
+                        back.addEventListener('select', function(evt) {
+                            //		self.showBackground();
+                            self.glWidget.dispose();
+                            self._player.destroy();
+                            self.removeChildWidget(self._player);
+                            self._player = null;
+                            self.removeChildWidget(self.glWidget);
+                            self.parentWidget.back();
+                        });
 
-					testGLWidget.setAnimCallback(callback2);
-					test4.focus();
-				});
+                        var test4 = new Button('test4');
+                        test4.appendChildWidget(new Label('Add video cube'));
+                        test4.addEventListener('select', function(evt) {
+                            self.addTestCube3();
+                            var callback3 = function() {
+                                self.mesh.rotation.x += 0.01;
+                                self.mesh.rotation.y += 0.02;
+                                self.mesh2.rotation.x += 0.01;
+                                self.mesh2.rotation.y += 0.02;
 
-				var test2 = new Button('test2');
-				test2.appendChildWidget(new Label('Load simple scene'));
-				test2.addEventListener('select', function(evt) {
+                                if (self.mesh3) {
+                                    self.mesh3.rotation.x += 0.01;
+                                    self.mesh3.rotation.y += 0.02;
+                                    if (self._player.outputElement.readyState === self._player.outputElement.HAVE_ENOUGH_DATA) {
+                                        self.mesh3tex.needsUpdate = true;
+                                    }
 
-					testGLWidget.addTestCube();
-					var callback = function() {
-						testGLWidget.mesh.rotation.x += 0.01;
-						testGLWidget.mesh.rotation.y += 0.02;
-					};
-					testGLWidget.setAnimCallback(callback);
-					testGLWidget.startAnimation();
-					test3.focus();
+                                }
+                            };
 
-				});
+                            self.glWidget.setAnimCallback(callback3);
+                            back.focus();
+                        });
 
-				verticalListMenu.appendChildWidget(test2);
-				verticalListMenu.appendChildWidget(test3);
-				verticalListMenu.appendChildWidget(test4);
-				verticalListMenu.appendChildWidget(back);
+                        var test3 = new Button('test3');
+                        test3.appendChildWidget(new Label('Add texture cube'));
+                        test3.addEventListener('select', function(evt) {
+                            self.addTestCube2();
+                            var callback2 = function() {
+                                self.mesh.rotation.x += 0.01;
+                                self.mesh.rotation.y += 0.02;
+                                if (self.mesh2) {
+                                    self.mesh2.rotation.x += 0.01;
+                                    self.mesh2.rotation.y += 0.02;
+                                }
+                            };
+
+                            self.glWidget.setAnimCallback(callback2);
+                            test4.focus();
+                        });
+
+                        var test2 = new Button('test2');
+                        test2.appendChildWidget(new Label('Add wireframe cube'));
+                        test2.addEventListener('select', function(evt) {
+
+                            self.addTestCube();
+                            var callback = function() {
+                                self.mesh.rotation.x += 0.01;
+                                self.mesh.rotation.y += 0.02;
+                            };
+                            self.glWidget.setAnimCallback(callback);
+                            self.glWidget.startAnimation();
+                            test3.focus();
+
+                        });
+
+                        verticalListMenu.appendChildWidget(test2);
+                        verticalListMenu.appendChildWidget(test3);
+                        verticalListMenu.appendChildWidget(test4);
+                        verticalListMenu.appendChildWidget(back);
 
 
-			} catch (err) {
+                    } catch (err) {
 
-				var test4 = new Button('test4');
-				test4.appendChildWidget(new Label('Failed to get WebGL context'));
-				verticalListMenu.appendChildWidget(test4);
-				test4.addEventListener('select', function(evt) {
-			//		self.showBackground();
-					self.parentWidget.back();
-				});
+                        var test4 = new Button('test4');
+                        test4.appendChildWidget(new Label('Failed to get WebGL context'));
+                        verticalListMenu.appendChildWidget(test4);
+                        test4.addEventListener('select', function(evt) {
+                            //		self.showBackground();
+                            self.parentWidget.back();
+                        });
 
-			} 
-		},
-		_onBeforeRender : function(ev) {
+                    }
+                },
+                _onBeforeRender: function(ev) {
 
-		},
+                },
+                hideBackground: function() {
+                    this._device.addClassToElement(document.body, 'background-none');
+                    this._application.getRootWidget().addClass('background-none');
+                },
+                showBackground: function() {
+                    if (this._device.getPlayerEmbedMode() === Media.EMBED_MODE_BACKGROUND) {
+                        this._device.removeClassFromElement(document.body, 'background-none');
+                        this._application.getRootWidget().removeClass('background-none');
+                    }
+                },
+                /**
+                 * Adds a simple wireframe mesh for test
+                 */
+                addTestCube: function() {
 
-		hideBackground : function() {
-			this._device.addClassToElement(document.body, 'background-none');
-			this._application.getRootWidget().addClass('background-none');
-		},
-		showBackground : function() {
-			if (this._device.getPlayerEmbedMode() === Media.EMBED_MODE_BACKGROUND) {
-				this._device.removeClassFromElement(document.body, 'background-none');
-				this._application.getRootWidget().removeClass('background-none');
-			}
-		}
-	});
-});
+                    var geometry = new THREE.CubeGeometry(200, 200, 200);
+                    var material = new THREE.MeshBasicMaterial({color: 0xffffff, wireframe: true});
+
+                    this.mesh = new THREE.Mesh(geometry, material);
+                    this.glWidget.scene.add(this.mesh);
+                    this.glWidget.renderer.setClearColorHex(0x555, 1);
+                },
+                addTestCube2: function() {
+                    var self = this;
+
+                    var geometry = new THREE.CubeGeometry(200, 200, 200);
+                    THREE.ImageUtils.loadTexture('static/img/b-texture-inv.png', {}, function(texture) {
+
+                        var material = new THREE.MeshBasicMaterial({map: texture});
+
+                        self.mesh2 = new THREE.Mesh(geometry, material);
+                        self.mesh2.position.x = -400;
+                        self.glWidget.scene.add(self.mesh2);
+                    });
+
+
+                },
+                addTestCube3: function() {
+                    var self = this;
+                    // Create a video player
+                    var videoUrl = "static/mp4/spinning-logo.mp4";
+                    var videoType = "video/mp4";
+
+                    // Create the player and append it to the component
+                    this._player = this._device.createPlayer('testPlayer', 'video');
+                    this._player.addClass('visibility-hidden');
+
+                    this.appendChildWidget(this._player);
+
+                    // Start playing the video as soon as the device fires an antie 'canplay' event
+                    this._player.addEventListener('canplay', function(evt) {
+                        self._player.outputElement.hidden = true;
+
+                        self._player.play();
+
+                        var geometry = new THREE.CubeGeometry(200, 200, 200);
+                        //var vel = document.getElementById(self._player.id)
+                        self.mesh3tex = new THREE.Texture(self._player.outputElement);
+                        self.mesh3tex.generateMipmaps = false;
+                        self.mesh3tex.magFilter = THREE.LinearFilter;
+                        self.mesh3tex.minFilter = THREE.LinearFilter;
+
+                        var material = new THREE.MeshBasicMaterial({color: 0xffffff, map: self.mesh3tex});
+
+                        self.mesh3 = new THREE.Mesh(geometry, material);
+                        self.mesh3.position.x = 400;
+                        self.glWidget.scene.add(self.mesh3);
+
+                    });
+
+                    this._player.setSources([new VideoSource(videoUrl, videoType)]);
+                    this._player.load();
+
+                },
+            });
+        });
